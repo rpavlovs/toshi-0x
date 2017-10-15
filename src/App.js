@@ -24,10 +24,10 @@ class App extends ReactQueryParams {
       version        : null,
 
 
-      maker             : '0x',
+      maker             : '',
       makerToken        : TOKEN.ID.EWA,
       makerTokenAmount  : 0,
-      taker             : '0x',
+      taker             : '',
       takerToken        : TOKEN.ID.EWB,
       takerTokenAmount  : 0,
 
@@ -67,10 +67,10 @@ class App extends ReactQueryParams {
 
 
 
-  handleMakerAmountChange = (event, index, makerTokenAmount) => {
+  handleMakerAmountChange = (event, makerTokenAmount) => {
     this.setState({ makerTokenAmount })
   }
-  handleMakerChange = (event, index, maker) => {
+  handleMakerChange = (event, maker) => {
     this.setState({ maker })
   }
   handleMakerTokenChange = (event, index, makerToken) => {
@@ -79,10 +79,10 @@ class App extends ReactQueryParams {
 
 
 
-  handleTakerAmountChange = (event, index, takerTokenAmount) => {
+  handleTakerAmountChange = (event, takerTokenAmount) => {
     this.setState({ takerTokenAmount })
   }
-  handleTakerChange = (event, index, taker) => {
+  handleTakerChange = (event, taker) => {
     this.setState({ taker })
   }
   handleTakerTokenChange = (event, index, takerToken) => {
