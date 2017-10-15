@@ -33,6 +33,7 @@ class App extends ReactQueryParams {
       takerTokenAmount  : 0,
 
       exchangeRate      : 0,
+      isTransfer        : true,
     }
 
   }
@@ -56,6 +57,7 @@ class App extends ReactQueryParams {
         version,
         maker: coinbase,
         taker: coinbase,
+        isTransfer: !!this.queryParams.transfer,
       })
 
     }
@@ -158,22 +160,7 @@ class App extends ReactQueryParams {
         zDepth={2}
         >
 
-        <div>
-          <TextField
-            floatingLabelText={'from'}
-            fullWidth={true}
-            name={'makerAddress'}
-            value={this.state.maker}
-            onChange={this.handleMakerChange}
-            />
-          <TextField
-            floatingLabelText={'to'}
-            fullWidth={true}
-            name={'takerAddress'}
-            value={this.state.taker}
-            onChange={this.handleTakerChange}
-            />
-        </div>
+        {this.renderAddresses()}
 
         <div style={{
           marginTop: '70px',
@@ -239,7 +226,7 @@ class App extends ReactQueryParams {
 
         <div style={{textAlign: 'center', marginTop: '70px'}}>
           <RaisedButton
-            label="Send"
+            label={this.state.isTransfer ? 'Send' : 'Swap'}
             primary={true}
             fullWidth={true}
             onClick={this.handleSubmit}
@@ -262,6 +249,35 @@ class App extends ReactQueryParams {
         </div> */}
       </Paper>
     )
+  }
+
+
+
+  renderAddresses() {
+
+    if (!this.state.isTransfer)
+      return
+
+    return (
+      <div>
+        <TextField
+          floatingLabelText={'from'}
+          fullWidth={true}
+          name={'makerAddress'}
+          value={this.state.maker}
+          onChange={this.handleMakerChange}
+          disabled={true}
+          />
+        <TextField
+          floatingLabelText={'to'}
+          fullWidth={true}
+          name={'takerAddress'}
+          value={this.state.taker}
+          onChange={this.handleTakerChange}
+          />
+      </div>
+    )
+
   }
 
 

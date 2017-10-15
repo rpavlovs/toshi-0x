@@ -66,7 +66,7 @@ const fillOrder = async ({ amount, signedOrder }) => {
   const taker = await web3Util.getCoinbase()
   return await zeroEx.exchange.fillOrderAsync(
     signedOrder,
-    ZeroEx.toBaseUnitAmount(new BigNumber(amount), 10),
+    ZeroEx.toBaseUnitAmount((new BigNumber(amount)).mul(10^18), 10),
     true,
     taker
   )
