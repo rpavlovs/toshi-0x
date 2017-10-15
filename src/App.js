@@ -47,7 +47,8 @@ class App extends ReactQueryParams {
       await web3Util.init()
       await zeroExUtil.init()
 
-      // await zeroExUtil.setAlowance('0x2956356cd2a2bf3202f771f50d3d14a367b48070')
+      // await zeroExUtil.setAlowance('0x6FC773BA50dc1dc6A4A3698251BAF3Cee1B6eb26'.toLowerCase())
+      // await zeroExUtil.setAlowance('0x92112771f33BE187CaF2226a041bE6F2bC2319f5'.toLowerCase())
 
       const version  = web3Util.getVersion()
       const coinbase = await web3Util.getCoinbase()
@@ -96,24 +97,31 @@ class App extends ReactQueryParams {
 
 
   async handleSubmit(event) {
-    event.preventDefault();
+    try {
+      event.preventDefault();
 
-    const {
-      // makerTokenAmount,
-      // takerTokenAmount,
-      // makerTokenAddress,
-      // takerTokenAddress,
-    } = this.state.order
+      const {
+        // makerTokenAmount,
+        // takerTokenAmount,
+        // makerTokenAddress,
+        // takerTokenAddress,
+      } = this.state.order
 
-    const filledOrder = await zeroExUtil.swap({
-      makerTokenAddress : '0x6FC773BA50dc1dc6A4A3698251BAF3Cee1B6eb26',
-      makerTokenAmount  : 1,
-      takerTokenAddress : '0x92112771f33BE187CaF2226a041bE6F2bC2319f5',
-      takerTokenAmount  : 10,
-    })
+      const filledOrder = await zeroExUtil.swap({
+        makerTokenAddress : '0x6FC773BA50dc1dc6A4A3698251BAF3Cee1B6eb26'.toLowerCase(),
+        makerTokenAmount  : 1,
+        takerTokenAddress : '0x92112771f33BE187CaF2226a041bE6F2bC2319f5'.toLowerCase(),
+        takerTokenAmount  : 1,
+      })
 
-    console.log('Filled order: ', filledOrder)
-    this.setState({ signedOrder: filledOrder })
+      console.log('Filled order: ', filledOrder)
+      this.setState({ signedOrder: filledOrder })
+
+    }
+    catch(error) {
+      console.log(error)
+      this.setState({ error })
+    }
 
   }
 
