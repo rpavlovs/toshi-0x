@@ -15,6 +15,7 @@ import TOKEN            from './constants/token'
 
 
 class App extends ReactQueryParams {
+
   constructor(props) {
     super(props)
 
@@ -150,9 +151,9 @@ class App extends ReactQueryParams {
       <Paper
         style={{
           margin: '50px auto 0',
-          width: '500px',
+          maxWidth: '400px',
           textAlign: 'center',
-          padding: '50px 0 50px 0'
+          padding: '20px'
         }}
         zDepth={2}
         >
@@ -160,14 +161,14 @@ class App extends ReactQueryParams {
         <div>
           <TextField
             floatingLabelText={'from'}
-            style={{width: '380px'}}
+            fullWidth={true}
             name={'makerAddress'}
             value={this.state.maker}
             onChange={this.handleMakerChange}
             />
           <TextField
             floatingLabelText={'to'}
-            style={{width: '380px'}}
+            fullWidth={true}
             name={'takerAddress'}
             value={this.state.taker}
             onChange={this.handleTakerChange}
@@ -240,7 +241,7 @@ class App extends ReactQueryParams {
           <RaisedButton
             label="Send"
             primary={true}
-            style={{width: '400px'}}
+            fullWidth={true}
             onClick={this.handleSubmit}
           />
         </div>
