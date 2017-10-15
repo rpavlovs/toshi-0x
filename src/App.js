@@ -177,6 +177,11 @@ class App extends ReactQueryParams {
         zDepth={2}
         >
 
+        <img
+          style={{hight: '100px'}}
+          src={'https://challengepost-s3-challengepost.netdna-ssl.com/photos/production/software_thumbnail_photos/000/549/873/datas/medium.png'}
+          />
+
         {this.renderAddresses()}
 
         <div style={{
