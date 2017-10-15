@@ -9,6 +9,7 @@ import MenuItem         from 'material-ui/MenuItem';
 import Paper            from 'material-ui/Paper';
 import RightArrow       from 'material-ui/svg-icons/action/trending-flat';
 import RaisedButton     from 'material-ui/RaisedButton';
+import Snackbar         from 'material-ui/Snackbar';
 
 import TOKEN            from './constants/token'
 
@@ -21,18 +22,19 @@ class App extends ReactQueryParams {
 
     this.state = {
       signedOrder    : null,
-      error          : null,
+      error          : false,
+      hasErrored     : false,
       version        : null,
 
 
       maker             : '',
       makerToken        : TOKEN.ID.EWA,
-      makerTokenAmount  : 0,
+      makerTokenAmount  : 1,
       taker             : '',
       takerToken        : TOKEN.ID.EWB,
-      takerTokenAmount  : 0,
+      takerTokenAmount  : 2,
 
-      exchangeRate      : 0,
+      exchangeRateAtoB  : 2,
       isTransfer        : true,
     }
 
@@ -63,7 +65,7 @@ class App extends ReactQueryParams {
     }
     catch(error) {
       console.log(error)
-      this.setState({ error })
+      this.setState({ error, hasErrored: true })
     }
 
   }
@@ -71,7 +73,15 @@ class App extends ReactQueryParams {
 
 
   handleMakerAmountChange = (event, makerTokenAmount) => {
-    this.setState({ makerTokenAmount })
+
+    const { makerToken, takerToken } = this.state
+
+    makerTokenAmount = parseInt(makerTokenAmount, 10)
+
+    this.setState({
+      makerTokenAmount,
+      takerTokenAmount: makerTokenAmount * TOKEN.EXCHANGE_RATE[makerToken][takerToken]
+     })
   }
   handleMakerChange = (event, maker) => {
     this.setState({ maker })
@@ -83,7 +93,14 @@ class App extends ReactQueryParams {
 
 
   handleTakerAmountChange = (event, takerTokenAmount) => {
-    this.setState({ takerTokenAmount })
+    const { makerToken, takerToken } = this.state
+
+    takerTokenAmount = parseInt(takerTokenAmount, 10)
+
+    this.setState({
+      makerTokenAmount: takerTokenAmount * TOKEN.EXCHANGE_RATE[takerToken][makerToken],
+      takerTokenAmount,
+    })
   }
   handleTakerChange = (event, taker) => {
     this.setState({ taker })
@@ -122,7 +139,7 @@ class App extends ReactQueryParams {
     }
     catch(error) {
       console.log(error)
-      this.setState({ error })
+      this.setState({ error, hasErrored: true })
     }
 
   }
@@ -232,9 +249,16 @@ class App extends ReactQueryParams {
             onClick={this.handleSubmit}
           />
         </div>
-        <div>
+        {/* <div>
           {this.renderError()}
-        </div>
+        </div> */}
+        <Snackbar
+          style={{color: 'red'}}
+          open={this.state.hasErrored}
+          message={'' + this.state.error}
+          autoHideDuration={4000}
+          onRequestClose={() => this.setState({ hasErrored: false })}
+        />
         {/* <div>
           <main className="container">
             <div className="pure-g">
