@@ -1,47 +1,41 @@
 import React, { Component } from 'react'
-import getWeb3 from './utils/getWeb3'
-import { ZeroEx } from '0x.js'
-import BigNumber from 'bignumber.js'
-import ReactQueryParams from 'react-query-params';
+import web3Util             from './utils/web3'
+import zeroExUtil           from './utils/getZeroEx'
+import { ZeroEx }           from '0x.js'
+import ReactQueryParams     from 'react-query-params';
 
 import './css/oswald.css'
 import './css/open-sans.css'
 import './css/pure-min.css'
 import './App.css'
-import Form from './Form'
+
+
 
 class App extends ReactQueryParams {
   constructor(props) {
     super(props)
 
     this.state = {
-      web3           : null,
-      zeroEx         : null,
       signedOrder    : null,
       error          : null,
-
+      version        : null,
       coinbase       : null,
-      transferAmount : 0,
-      toAddr         : '',
+
+      order: {
+        makerTokenAddress : '0x05d090b51c40b020eab3bfcb6a2dff130df22e9c',
+        makerTokenAmount  : 0,
+        takerTokenAddress : '0x05d090b51c40b020eab3bfcb6a2dff130df22e9c',
+        takerTokenAmount  : 0,
+        taker             : '0x',
+        exchangeRate      : 0,
+      }
     }
 
-    this.handleSubmit       = this.handleSubmit.bind(this);
-    this.handleAmountChange = this.handleAmountChange.bind(this);
-    this.handleToAddrChange = this.handleToAddrChange.bind(this);
+    this.handleSubmit            = this.handleSubmit.bind(this);
+    this.handleMakerAmountChange = this.handleMakerAmountChange.bind(this);
+    this.handleTakerAmountChange = this.handleTakerAmountChange.bind(this);
+    this.handleTakerChange       = this.handleTakerChange.bind(this);
 
-  }
-
-
-
-  getCoinbase(web3) {
-    return new Promise((resolve, reject) => {
-      web3.eth.getCoinbase((error, coinbase) => {
-        if (error) {
-          reject(error)
-        }
-        resolve(coinbase)
-      })
-    })
   }
 
 
@@ -50,17 +44,16 @@ class App extends ReactQueryParams {
 
     try {
 
-      const { web3 } = await getWeb3
-      const zeroEx = new ZeroEx(web3.currentProvider)
-      console.log('Web3 version: ', web3.version.api)
-      this.setState({ web3, zeroEx })
+      await web3Util.init()
+      await zeroExUtil.init()
 
-      const coinbase = await this.getCoinbase(web3)
+      // await zeroExUtil.setAlowance('0x2956356cd2a2bf3202f771f50d3d14a367b48070')
+
+      const version  = web3Util.getVersion()
+      const coinbase = await web3Util.getCoinbase()
+      console.log('Web3 version: ', version)
       console.log('Coinbase: ', coinbase)
-      this.setState({ coinbase })
-
-      const signedOrder = await this.makeOrder(coinbase, zeroEx)
-      this.setState({ signedOrder })
+      this.setState({ version, coinbase })
 
     }
     catch(error) {
@@ -70,61 +63,67 @@ class App extends ReactQueryParams {
 
   }
 
-  async makeOrder(coinbase, zeroEx) {
 
-    console.log('Params: ', JSON.stringify(this.queryParams))
+
+  handleMakerAmountChange(event) {
+
+    const newMakerAmount = event.target.value
+
     const {
-      tokenAddr,
-    } = this.queryParams
+      makerTokenAddress,
+      takerTokenAddress,
+    } = this.state.order
 
-    const orderHash = ZeroEx.getOrderHashHex({
-      exchangeContractAddress    : '0x90fe2af704b34e0224bf2299c838e04d4dcf1364',
-      expirationUnixTimestampSec : '1508457600',
-      feeRecipient               : '0x0000000000000000000000000000000000000000',
-      maker                      : coinbase,
-      makerFee                   : new BigNumber(0),
-      makerTokenAddress          : '0x05d090b51c40b020eab3bfcb6a2dff130df22e9c',
-      makerTokenAmount           : new BigNumber(1),
-      salt                       : ZeroEx.generatePseudoRandomSalt(),
-      taker                      : ZeroEx.NULL_ADDRESS,
-      takerFee                   : new BigNumber(0),
-      takerTokenAddress          : '0x05d090b51c40b020eab3bfcb6a2dff130df22e9c',
-      takerTokenAmount           : new BigNumber(1),
+    this.setState({ order: {
+      makerTokenAmount: newMakerAmount,
+      // takerTokenAddress: quote,
+    } });
+
+  }
+
+
+
+  handleTakerAmountChange(event) {
+    this.setState({ order: { takerTokenAmount: event.target.value } });
+  }
+
+
+
+  handleTakerChange(event) {
+    this.setState({ order: { taker: event.target.value } });
+  }
+
+
+
+  async handleSubmit(event) {
+    event.preventDefault();
+
+    const {
+      // makerTokenAmount,
+      // takerTokenAmount,
+      // makerTokenAddress,
+      // takerTokenAddress,
+    } = this.state.order
+
+    const filledOrder = await zeroExUtil.swap({
+      makerTokenAddress : '0x6FC773BA50dc1dc6A4A3698251BAF3Cee1B6eb26',
+      makerTokenAmount  : 1,
+      takerTokenAddress : '0x92112771f33BE187CaF2226a041bE6F2bC2319f5',
+      takerTokenAmount  : 10,
     })
 
-    return await zeroEx.signOrderHashAsync(orderHash, coinbase)
+    console.log('Filled order: ', filledOrder)
+    this.setState({ signedOrder: filledOrder })
 
   }
 
 
 
-  handleSubmit() {
-    const { transferAmount, toAddr } = this.state
-
-    console.log('Amount: ', transferAmount)
-    console.log('toAddr: ', toAddr)
-  }
 
 
-
-  handleAmountChange(event) {
-    this.setState({ transferAmount: event.target.value });
-  }
-
-  handleToAddrChange(event) {
-    this.setState({ toAddr: event.target.value });
-  }
-
-  async sendERC(coinbase) {
-
-    const contractAddress = "0x59EC08F4C79a222E78e877F03b5d850E0FD15EF3"
-    const abiArray = [{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"_initialOwner","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"owner","type":"address"},{"indexed":true,"name":"spender","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Transfer","type":"event"}]
-
-    var MyContract = web3.eth.contract(abiArray);
-    var myContractInstance = MyContract.at(contractAddress);
-
-    return await myContractInstance.transfer('0x0005653D8b0b4414Ba17d0C722F97fa977cf3777', 1, {from: coinbase, gas: 21000000000});
-  }
+  ////////////////
+  // RENDERINGS //
+  ////////////////
 
 
 
@@ -154,32 +153,36 @@ class App extends ReactQueryParams {
   renderTransferForm() {
 
     return (
-      <Form onSubmit={this.handleSubmit}>
+      <form onSubmit={this.handleSubmit}>
         <label>
           To:
           <input
             type="text"
-            value={this.state.toAddr}
-            onChange={this.handleToAddrChange}
+            value={this.state.order.taker}
+            onChange={this.handleTakerChange}
             />
         </label>
         <br />
         <label>
-          Amount:
+          Amount sent:
           <input
             type="text"
-            value={this.state.transferAmount}
-            onChange={this.handleAmountChange}
+            value={this.state.order.makerTokenAmount}
+            onChange={this.handleMakerAmountChange}
             />
-          {/* <select value={this.state.targetTokenName}>
-            <option selected value="eth">Grapefruit</option>
-            <option value="ethwaterloo">Lime</option>
-            <option value="gno">Coconut</option>
-            <option value="mango">Mango</option>
-          </select> */}
         </label>
-        <input type="submit" value="Submit" />
-      </Form>
+        <br />
+        <label>
+          Amount recieved:
+          <input
+            type="text"
+            value={this.state.order.takerTokenAmount}
+            onChange={this.handleTakerAmountChange}
+            />
+        </label>
+        <br />
+        <input type="submit" value="Send" />
+      </form>
     );
 
   }
@@ -187,14 +190,14 @@ class App extends ReactQueryParams {
 
 
   renderWeb3Info() {
-    const { web3, coinbase } = this.state
+    const { version, coinbase } = this.state
 
-    if (!web3) {
+    if (!version) {
       return <p>Web3 not found</p>
     }
     return (
       <p>
-        {'Web3 version: ' + web3.version.api}
+        {'Web3 version: ' + version}
         <br/>
         {'Coinbase: ' + coinbase}
       </p>
